@@ -1,28 +1,22 @@
-#!/usr/bin/env python3
 import os
-
-import aws_cdk as cdk
-
+from aws_cdk import App
 from ovrs_code_pipeline.ovrs_code_pipeline_stack import OvrsCodePipelineStack
+from ovrs_code_pipeline.frontdev import frontdev
+from ovrs_code_pipeline.forntmain import frontmain
 
+app = App()
 
-app = cdk.App()
-OvrsCodePipelineStack(app, "OvrsCodePipelineStack",
-    # If you don't specify 'env', this stack will be environment-agnostic.
-    # Account/Region-dependent features and context lookups will not work,
-    # but a single synthesized template can be deployed anywhere.
+OvrsCodePipelineStack(app, "OvrsCodePipelineStack", env={
+    "region": "eu-central-1"
+})
 
-    # Uncomment the next line to specialize this stack for the AWS Account
-    # and Region that are implied by the current CLI configuration.
+frontmain(app, "frontmain", env={
+    "region": "eu-central-1"
+})
 
-    #env=cdk.Environment(account=os.getenv('CDK_DEFAULT_ACCOUNT'), region=os.getenv('CDK_DEFAULT_REGION')),
-
-    # Uncomment the next line if you know exactly what Account and Region you
-    # want to deploy the stack to. */
-
-    #env=cdk.Environment(account='123456789012', region='us-east-1'),
-
-    # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
-    )
-
+frontdev(app, "frontdev", env={
+    "region": "eu-central-1"
+})
 app.synth()
+
+
