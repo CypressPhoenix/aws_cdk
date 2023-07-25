@@ -1,48 +1,47 @@
 from aws_cdk import (
-    Stack,
-    pipelines,
     aws_codepipeline as codepipeline,
-    aws_codepipeline_actions as codepipeline_actions
+    aws_codepipeline_actions as codepipeline_actions,
+    aws_codebuild as codebuild,
+    Stack,
 )
 from constructs import Construct
+class FrontMain(Stack):
+    def __init__(self, scope: Construct, id: str, **kwargs) -> None:
+        super().__init__(scope, id, **kwargs)
 
-class OvrsCodePipelineStack(Stack):
 
-    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
-        super().__init__(scope, construct_id, **kwargs)
 
-        git_repo_owner = "Oversecured-traine"
-        git_repo_name = "ovsrd-trainee-front"
-        git_branch = "main"
-        connection_arn = "arn:aws:codestar-connections:eu-north-1:592699102634:connection/1810dca9-5df5-41e4-8885-59f5bd6de8b0"
-        git_input = pipelines.CodePipelineSource.connection(
-            repo_string=git_repo_owner + "/" + git_repo_name,
-            branch=git_branch,
-            connection_arn=connection_arn
+        pipeline_1 = codepipeline.Pipeline(self, "Pipeline1", pipeline_name="Pipeline1")
+
+
+        github_source_action = codepipeline_actions.CodeStarConnectionsSourceAction(
+            action_name="GitHubSource",
+            owner="",
+            repo="",
+            branch="",
+            connection_arn="",
+            output=codepipeline.Artifact(),
+            trigger_on_push=True,
         )
 
-        code_pipeline = codepipeline.Pipeline(
-            self, "Pipeline",
-            pipeline_name="new-pipeline",
-            cross_account_keys=False
+        pipeline_1.add_stage(stage_name="Source", actions=[github_source_action])
+
+        project = codebuild.PipelineProject(
+            self,
+            "Pipeline1Project",
+            build_spec=codebuild.BuildSpec.from_source_filename("buildspec.yml"),
+            environment=codebuild.BuildEnvironment(
+                build_image=codebuild.LinuxBuildImage.STANDARD_1_0()
+            ),
         )
 
-        synth_step = pipelines.ShellStep(
-            id="Synth",
-            install_commands=[
-                'echo "Build"'
-            ],
-            commands=[
-                'echo "Build"'
-            ],
-            input=git_input
+        build_action = codepipeline_actions.CodeBuildAction(
+            action_name="BuildAction",
+            input=pipeline_1.stages[0].action_outputs[0],
+            project=project,
+            outputs=[codepipeline.Artifact()],
         )
 
-        pipeline = pipelines.CodePipeline(
-            self, 'CodePipeline',
-            self_mutation=True,
-            code_pipeline=code_pipeline,
-            synth=synth_step
-        )
 
+        pipeline_1.add_stage(stage_name="Build", actions=[build_action])
 
