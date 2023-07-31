@@ -11,8 +11,6 @@ class FrontInfrastructureDev(Stack):
         bucket = s3.Bucket(
             self,
             "BucketForFrontEnd",
-            removal_policy=RemovalPolicy.DESTROY,
-            auto_delete_objects=True,
         )
 
         distribution = cloudfront.CloudFrontWebDistribution(
